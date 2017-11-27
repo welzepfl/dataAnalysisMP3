@@ -211,7 +211,7 @@ if (~dataNfeat)
     err_test_lin = (err_test_xlin+err_test_ylin)/2;
     err_test_2 = (err_test_x2+err_test_y2)/2;
     
-    save('dataNfeat.mat','err_train_lin','err_train_2','err_test_lin','err_test_2');
+    save('dataNfeat.mat','err_train_lin','err_train_2','err_test_lin','err_test_2','h','nStep');
 else
     load('dataNfeat.mat');
 end
