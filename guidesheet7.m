@@ -28,6 +28,23 @@ else
     load('dataPCA.mat');
 end
 
+% Plot
+figure(94)
+plot(cumsum(variance)/sum(variance))
+hold on
+plot([1,960],[0.9,0.9],'--')
+xlabel('Number of PCs')
+ylabel('Relative cumulative cariance')
+xlim([0,960])
+if p_flag
+    print('figures/cumsum','-dpng')
+    print('figures/cumsum','-depsc')
+end
+
+%% Normalization
+t_nTraining = training.Data./mean(training.Data);
+test.Data = test.Data./mean(training.Data);
+training.Data = t_nTraining;
 
 %% Linear regression 
 % X position

@@ -8,12 +8,17 @@ p_flag = 0; % exports figures only if set to 1
 
 data = load('Data.mat');
 
-dataRegression = 0;
-dataLasso = 0;
-dataElasticNets = 0;
+dataRegression = 1;
+dataLasso = 1;
+dataElasticNets = 1;
 
 % split data 0.05:0.95
 [test, training, nTest, nTraining] = splitSet(data,0.05);
+
+% normalize data
+nTraining = training.Data./mean(training.Data);
+test.Data = test.Data./mean(training.Data);
+training.Data = nTraining;
 
 %% Regression
 
@@ -104,8 +109,8 @@ if (~dataLasso)
     err_y_test_lasso = immse(test.PosY,lasso_y_test);
     
     save('dataLasso.mat','b_x_lasso','fitInfo_x_lasso','b_y_lasso','fitInfo_y_lasso',...
-        'nnz_x_lasso','nnz_y_lasso','lasso_x_test','lasso_y_test','err_x_test',...
-        'err_y_test','lambda');
+        'nnz_x_lasso','nnz_y_lasso','lasso_x_test','lasso_y_test','err_x_test_lasso',...
+        'err_y_test_lasso','lambda');
 else
     load('dataLasso.mat');
 end
@@ -166,7 +171,7 @@ if (~dataElasticNets)
         nnz_y_en(indLambda) = nnz(b_y_en(:,indLambda));
     end
     
-    if (~(fitInfo_x_lasso.IndexMinMSE == fitInfo_y_lasso.IndexMinMSE))
+    if (~(fitInfo_x_en.IndexMinMSE == fitInfo_y_en.IndexMinMSE))
         disp('index of min error is not the same for x as for y')
     end
 
@@ -176,6 +181,10 @@ if (~dataElasticNets)
             test.Data*b_y_en(:,fitInfo_y_en.IndexMinMSE);
     err_x_test_en = immse(test.PosX,en_x_test);
     err_y_test_en = immse(test.PosY,en_y_test);
+    
+    save('dataElasticNets.mat','b_x_en','fitInfo_x_en','b_y_en','fitInfo_y_en',...
+        'nnz_x_en','nnz_y_en','en_x_test','en_y_test','err_x_test_en',...
+        'err_y_test_en','lambda');
 else
     load('dataElasticNets')
 end
