@@ -16,8 +16,6 @@ data = load('Data.mat');
 % 
 % TODO: number of PC's
 
-
-
 % split data 0.7:0.3
 [test, training, nTest, nTraining] = splitSet(data,0.7);
 
@@ -36,31 +34,49 @@ lambda = logspace(-10,0,n_lambda);
 n_alpha = 16;
 alpha = linspace(0.01,1,n_alpha);
 n_fold = 10;
+nStep = 60; % step of features increased per loop
 
-b_x = zeros(n_alpha,n_lambda,size(nTrainingPCA,2)); b_y = zeros(n_alpha,n_lambda,size(nTrainingPCA,2));
+% check if previous file exists
+if exist('beta.mat','file')
+    disp('Datafile found')
+    load('beta.mat');
+    countPC = idxPC+1;
+else
+    countPC = 1;
+    b_x = zeros(size(nTrainingPCA,2),n_alpha,n_lambda,size(nTrainingPCA,2)); b_y = zeros(size(nTrainingPCA,2),n_alpha,n_lambda,size(nTrainingPCA,2));
+end
 
 % k-fold cross-validation
-%for idxFold = 1:n_fold
+for idxPC = countPC:(size(nTrainingPCA,2)/nStep)
+    tic;
     for idxAlpha = 1:n_alpha
         for idxLambda = 1:n_lambda
-%             [b_x(idxAlpha,idxLambda,:), fitInfo_x(idxAlpha,idxLambda)] = lasso(nTrainingPCA,training.PosX,'CV',n_fold,'lambda',lambda(idxLambda),'Alpha',alpha(idxAlpha));
-%             [b_y(idxAlpha,idxLambda,:), fitInfo_y(idxAlpha,idxLambda)] = lasso(nTrainingPCA,training.PosY,'CV',n_fold,'lambda',lambda(idxLambda),'Alpha',alpha(idxAlpha));
+            [b_x(idxPC,idxAlpha,idxLambda,1:idxPC*nStep), fitInfo_x(idxPC,idxAlpha,idxLambda)] = lasso(nTrainingPCA(:,1:idxPC*nStep),training.PosX,'CV',n_fold,'lambda',lambda(idxLambda),'Alpha',alpha(idxAlpha));
+            [b_y(idxPC,idxAlpha,idxLambda,1:idxPC*nStep), fitInfo_y(idxPC,idxAlpha,idxLambda)] = lasso(nTrainingPCA(:,1:idxPC*nStep),training.PosY,'CV',n_fold,'lambda',lambda(idxLambda),'Alpha',alpha(idxAlpha));
         end
         % This part of the code is not optimized in terms of efficiency
-        [minLambda_x(idxAlpha), indLambda_x(idxAlpha)] = min([fitInfo_x(idxAlpha,:).MSE]);
-        [minLambda_y(idxAlpha), indLambda_y(idxAlpha)] = min([fitInfo_y(idxAlpha,:).MSE]);
+        [t_minLambda_x(idxAlpha), t_indLambda_x(idxAlpha)] = min([fitInfo_x(idxPC,idxAlpha,:).MSE]);
+        [t_minLambda_y(idxAlpha), t_indLambda_y(idxAlpha)] = min([fitInfo_y(idxPC,idxAlpha,:).MSE]);
     end
-%end
+    % find minimum MSE for each number of PCs
+    [minAlpha_x(idxPC), indAlpha_x(idxPC)] = min(t_minLambda_x);
+    [minAlpha_y(idxPC), indAlpha_y(idxPC)] = min(t_minLambda_y);
+    indLambda_x(idxPC) = t_indLambda_x(indAlpha_x(idxPC));
+    indLambda_y(idxPC) = t_indLambda_y(indAlpha_y(idxPC));
+    
+    % checkpoint
+    save('beta.mat','b_x','b_y','minAlpha_x','minAlpha_y','indLambda_x',...
+        'indLambda_y','indAlpha_x','indAlpha_y','fitInfo_x','fitInfo_y','idxPC');
+    t_loop = toc;
+    disp(['saved after ',num2str(idxPC*nStep),' PCs after ',num2str(t_loop),' s'])
+end
 
-[minAlpha_x, indAlpha_x] = min(minLambda_x);
-[minAlpha_y, indAlpha_y] = min(minLambda_y);
-
-test_x = fitInfo_x(indAlpha_x,indLambda_x(indAlpha_x)).Intercept+...
-    nTestPCA*reshape(b_x(indAlpha_x,indLambda_x(indAlpha_x),:),[960 1]);
-test_y = fitInfo_y(indAlpha_y,indLambda_y(indAlpha_y)).Intercept+...
-    nTestPCA*reshape(b_y(indAlpha_y,indLambda_y(indAlpha_y),:),[960,1]);
-test_err_x = immse(test.PosX, test_x);
-test_err_y = immse(test.PosY, test_y);
+% test_x = fitInfo_x(indAlpha_x,indLambda_x(indAlpha_x)).Intercept+...
+%     nTestPCA*reshape(b_x(indAlpha_x,indLambda_x(indAlpha_x),:),[960 1]);
+% test_y = fitInfo_y(indAlpha_y,indLambda_y(indAlpha_y)).Intercept+...
+%     nTestPCA*reshape(b_y(indAlpha_y,indLambda_y(indAlpha_y),:),[960,1]);
+% test_err_x = immse(test.PosX, test_x);
+% test_err_y = immse(test.PosY, test_y);
 
 
 
