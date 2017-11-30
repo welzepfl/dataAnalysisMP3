@@ -34,7 +34,7 @@ plot(cumsum(variance)/sum(variance))
 hold on
 plot([1,960],[0.9,0.9],'--')
 xlabel('Number of PCs')
-ylabel('Relative cumulative cariance')
+ylabel('Relative cumulative variance')
 xlim([0,960])
 if p_flag
     print('figures/cumsum','-dpng')
@@ -243,8 +243,8 @@ xlabel('Number of features')
 ylabel('Error')
 grid on
 if p_flag
-    print('functions/errNfeat','-dpng')
-    print('functions/errNfeat','-depsc')
+    print('figures/errNfeat','-dpng')
+    print('figures/errNfeat','-depsc')
 end
 
 clear -regexp ^t_

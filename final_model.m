@@ -3,6 +3,8 @@
 % Final model
 
 % some initial code
+close all
+clear
 addpath([pwd,'/functions']);
 set(0,'DefaultAxesFontSize',14);
 p_flag = 0; % exports figures only if set to 1
@@ -12,7 +14,7 @@ data = load('Data.mat');
 % Idea:
 % create training, and test set
 % implement (10-fold) cross-validation in training set in order to optimize
-% hyperparameters (lambda, alpha, number of features/PC's)
+% hyperparameters (lambda, alpha, number of PCs)
 % 
 % TODO: number of PC's
 
@@ -43,10 +45,12 @@ if exist('beta.mat','file')
     countPC = idxPC+1;
 else
     countPC = 1;
-    b_x = zeros(size(nTrainingPCA,2),n_alpha,n_lambda,size(nTrainingPCA,2)); b_y = zeros(size(nTrainingPCA,2),n_alpha,n_lambda,size(nTrainingPCA,2));
+    b_x = zeros(size(nTrainingPCA,2)/nStep,n_alpha,n_lambda,size(nTrainingPCA,2));
+    b_y = zeros(size(nTrainingPCA,2)/nStep,n_alpha,n_lambda,size(nTrainingPCA,2));
 end
 
-% k-fold cross-validation
+% k-fold cross-validation % nope: takes too much time. We have enough
+% samples
 for idxPC = countPC:(size(nTrainingPCA,2)/nStep)
     tic;
     for idxAlpha = 1:n_alpha
@@ -70,6 +74,32 @@ for idxPC = countPC:(size(nTrainingPCA,2)/nStep)
     t_loop = toc;
     disp(['saved after ',num2str(idxPC*nStep),' PCs after ',num2str(t_loop),' s'])
 end
+
+figure(99)
+plot([1:16],minAlpha_x)
+xlabel('Number of principal components')
+ylabel('MSE')
+xticks([2:2:16]);
+xticklabels({'120','240','360','480','600','720','840','960'})
+grid on
+
+
+figure(98)
+plot([1:16],minAlpha_y)
+xlabel('Number of principal components')
+ylabel('MSE')
+grid on
+
+figure(97)
+plot([1:16],indAlpha_x)
+xlabel('Number of principal components')
+ylabel('Ideal alpha value')
+yticks([2:2:n_alpha]);
+yticklabels({num2str(alpha(2)),num2str(alpha(4)),num2str(alpha(6)),...
+    num2str(alpha(8)),num2str(alpha(10)),num2str(alpha(12)),...
+    num2str(alpha(14)),num2str(alpha(16))});
+grid on
+
 
 % test_x = fitInfo_x(indAlpha_x,indLambda_x(indAlpha_x)).Intercept+...
 %     nTestPCA*reshape(b_x(indAlpha_x,indLambda_x(indAlpha_x),:),[960 1]);
