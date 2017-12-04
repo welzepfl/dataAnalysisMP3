@@ -43,8 +43,8 @@ testDataNormalized = (test.Data - meanTraining)./ stddevTraining;
 % 
 
 if (~dataPCA)
-    [coeffs, trainPCA, variance] = pca(trainingDataNormalized);
-    testPCA = testDataNormalized*coeffs;
+    [coeffs, trainPCA, variance] = pca(training.Data);
+    testPCA = test.Data*coeffs;
     
     save('dataPCA.mat','trainPCA','testPCA');
     
